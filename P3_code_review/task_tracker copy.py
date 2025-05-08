@@ -8,7 +8,6 @@ import json
 import os
 from datetime import datetime
 import time
-import re
 
 # Global variables
 TASKS_FILE = "tasks.json"
@@ -24,7 +23,6 @@ def load_tasks():
         except json.JSONDecodeError:
             # Bug: Silent failure on corrupted JSON, doesn't initialize 'tasks'
             print("Warning: Tasks file is corrupted.")
-            tasks = {}
             # Missing: Should initialize tasks = {} here
     else:
         # Create an empty JSON file if it doesn't exist
@@ -33,12 +31,8 @@ def load_tasks():
 def save_tasks():
     """Save tasks to the JSON file."""
     # Bug: No error handling for file operations
-    try:
-        with open(TASKS_FILE, "w") as f:
-            json.dump(tasks, f)
-    except IOError:
-        print("Error: unable to open ${f}")
-
+    with open(TASKS_FILE, "w") as f:
+        json.dump(tasks, f)
 
 def generate_task_id():
     """Generate a new unique task ID."""
@@ -47,42 +41,19 @@ def generate_task_id():
         return 1
     return max(int(task_id) for task_id in tasks.keys()) + 1
 
-def validate_date(date):
-
-    if not re.match(r'^\d{4}-\d{2}-\d{2}$', date):
-        print("Invalid date format. Please try again...")
-        return False
-
-    year, month, day = map(int, date.split('-'))
-    if datetime(year, month, day) <= datetime.today():
-        print("Invalid future date. Please try again...")
-        return False
-    return True
-
-
 def add_task():
     """Add a new task."""
     print("\n=== Add New Task ===")
     
-    title = ""
-    while not title:
-        title = input("Enter task title: ")
-        if not title:
-            print("Empty title is not allowed. Please try again...")
+    title = input("Enter task title: ")
     # Bug: Missing validation for empty title
-    # Fix: User will keep being prompted until valid title is inputted
     
     description = input("Enter task description: ")
     
     # Bug: No validation or error handling for date format
-    # Fix: Use RegEx and datetime to check for valid date
-    due_date = False
-    while not due_date:
-        due_date = validate_date(input("Enter due date (YYYY-MM-DD): "))
+    due_date = input("Enter due date (YYYY-MM-DD): ")
     
     # Missing: No validation that the date is in the future
-
-    print(datetime.today())
     
     task_id = str(generate_task_id())
     tasks[task_id] = {
@@ -90,9 +61,7 @@ def add_task():
         "description": description,
         "due_date": due_date,
         "status": "incomplete",
-        "created_date": str(datetime.today())[0:10],
         # Bug: Missing created_date field required by specs
-        # Fix: Use datetime.today() method to get the current date
     }
     
     save_tasks()
@@ -129,7 +98,6 @@ def view_task():
     print(f"Description: {task['description']}")
     print(f"Due Date: {task['due_date']}")
     print(f"Status: {task['status']}")
-    print(f"Created Date: {task['created_date']}")
 
 def update_task():
     """Update an existing task."""
