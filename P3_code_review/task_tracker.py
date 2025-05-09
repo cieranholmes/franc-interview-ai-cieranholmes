@@ -33,6 +33,7 @@ def load_tasks():
 def save_tasks():
     """Save tasks to the JSON file."""
     # Bug: No error handling for file operations
+    # Fix: IOError handling
     try:
         with open(TASKS_FILE, "w") as f:
             json.dump(tasks, f)
@@ -48,7 +49,7 @@ def generate_task_id():
     return max(int(task_id) for task_id in tasks.keys()) + 1
 
 def validate_date(date):
-
+    """Helper method that checjs if a date is in the correct format and in the future"""
     if not re.match(r'^\d{4}-\d{2}-\d{2}$', date):
         print("Invalid date format. Please try again...")
         return False
@@ -64,11 +65,12 @@ def add_task():
     """Add a new task."""
     print("\n=== Add New Task ===")
     
-    title = ""
-    while not title:
+    while True:
         title = input("Enter task title: ")
         if not title:
             print("Empty title is not allowed. Please try again...")
+        else:
+            break
     # Bug: Missing validation for empty title
     # Fix: User will keep being prompted until valid title is inputted
     
@@ -76,11 +78,12 @@ def add_task():
     
     # Bug: No validation or error handling for date format
     # Fix: Use RegEx and datetime to check for valid date
-    due_date = False
+    due_date = ""
     while not due_date:
         due_date = validate_date(input("Enter due date (YYYY-MM-DD): "))
     
     # Missing: No validation that the date is in the future
+    # Fix: validate_date() method checks for future date
 
     print(datetime.today())
     
@@ -92,7 +95,7 @@ def add_task():
         "status": "incomplete",
         "created_date": str(datetime.today())[0:10],
         # Bug: Missing created_date field required by specs
-        # Fix: Use datetime.today() method to get the current date
+        # Fix: Use datetime.today() method and splicing to get the current date
     }
     
     save_tasks()
@@ -107,7 +110,7 @@ def view_all_tasks():
         return
     
     # Bug: This doesn't format output nicely with proper spacing
-    print("ID | Title | Due Date | Status")
+    print("ID | Title | Due Date | Status | Created Date")
     print("-" * 40)
     for task_id, task in tasks.items():
         print(f"{task_id} | {task['title']} | {task['due_date']} | {task['status']}")
@@ -152,9 +155,12 @@ def update_task():
     new_description = input("New Description: ")
     
     print(f"Current Due Date: {task['due_date']}")
-    new_due_date = input("New Due Date (YYYY-MM-DD): ")
+    new_due_date = ""
+    while not new_due_date:
+        new_due_date = validate_data(input("New Due Date (YYYY-MM-DD): "))
     
     # Bug: No validation on due date format
+    # Fix: Use helper method validate_date to validate date format and future date
     
     # Update task with new values, keeping old values if input is empty
     if new_title:
@@ -163,12 +169,24 @@ def update_task():
         task['description'] = new_description
     if new_due_date:
         # Bug: No validation of date format
+        # Fix: new_due_date is already validated at assignment
         task['due_date'] = new_due_date
     
     save_tasks()
     print(f"Task {task_id} updated successfully!")
 
 # Bug: Missing implementation of mark_task_complete function (FR1.7)
+def mark_task_complete():
+    """Mark a task as complete"""
+    print("\n=== Mark Task as Complete===")
+
+    task_id = input("Enter task ID: ") # follows same format as other methods for constintency
+
+    task = tasks[task_id]
+    task['status'] = "complete"
+
+    print("Task was successfully marked as complete.")
+
 
 def delete_task():
     """Delete a task."""
@@ -181,11 +199,24 @@ def delete_task():
         return
     
     # Bug: Missing confirmation before deletion
-    
-    del tasks[task_id]
-    save_tasks()
-    print(f"Task {task_id} deleted successfully!")
+    # Fix: User is continuously pronmpted until Y (yes) or n (no) is inputted
+    while True:
 
+        choice = input("Are you sure you want to delete this task? (Y/n): ")
+
+        match choice:
+            case "Y":
+                del tasks[task_id]
+                save_tasks()
+                print(f"Task {task_id} deleted successfully!")
+                break
+            case "n":
+                print("Cancelled operation: Task was not deleted.")
+                break
+            case _:
+                print("Incorrect choice. Please choose Y or n.")
+
+    
 def display_menu():
     """Display the main menu."""
     print("\n=== Task Tracker ===")
@@ -194,8 +225,10 @@ def display_menu():
     print("3. View Task")
     print("4. Update Task")
     # Bug: Missing option for marking task as complete
-    print("5. Delete Task")
-    print("6. Exit")
+    # Fix: Add mark task complete option to menu and push proceeding options up one spot
+    print("5. Mark Task as Complete")
+    print("6. Delete Task")
+    print("7. Exit")
 
 def main():
     """Main application function."""
@@ -216,8 +249,10 @@ def main():
         elif choice == "4":
             update_task()
         elif choice == "5":
-            delete_task()
+            mark_task_complete()
         elif choice == "6":
+            delete_task()
+        elif choice == "7":
             print("Exiting Task Tracker. Goodbye!")
             break
         else:
