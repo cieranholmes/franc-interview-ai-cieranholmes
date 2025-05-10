@@ -13,7 +13,6 @@ import re
 # Global variables
 TASKS_FILE = "tasks.json"
 tasks = {}
-
 def load_tasks():
     """Load tasks from the JSON file."""
     global tasks
@@ -37,28 +36,38 @@ def save_tasks():
     try:
         with open(TASKS_FILE, "w") as f:
             json.dump(tasks, f)
-    except IOError:
-        print("Error: unable to open ${f}")
-
+    except IOError as e:
+        print(f"Error: Unable to save tasks. {str(e)}")
 
 def generate_task_id():
     """Generate a new unique task ID."""
     # Bug: This doesn't guarantee uniqueness if tasks are deleted
-    if not tasks:
-        return 1
-    return max(int(task_id) for task_id in tasks.keys()) + 1
+    # Fix: Uses a set to find the first available unique id - new approach eliminates need for checking base case as well
+
+    used_ids = set(int(task_id) for task_id in tasks.keys())
+    new_id = 1
+
+    while new_id in used_ids:
+        new_id += 1
+
+    return new_id 
 
 def validate_date(date):
     """Helper method that checjs if a date is in the correct format and in the future"""
+
+    if not date:
+        return
+
     if not re.match(r'^\d{4}-\d{2}-\d{2}$', date):
         print("Invalid date format. Please try again...")
-        return False
+        return
 
     year, month, day = map(int, date.split('-'))
     if datetime(year, month, day) <= datetime.today():
         print("Invalid future date. Please try again...")
-        return False
-    return True
+        return
+
+    return date
 
 
 def add_task():
@@ -78,14 +87,13 @@ def add_task():
     
     # Bug: No validation or error handling for date format
     # Fix: Use RegEx and datetime to check for valid date
-    due_date = ""
-    while not due_date:
+    while True:
         due_date = validate_date(input("Enter due date (YYYY-MM-DD): "))
+        if due_date:
+            break
     
     # Missing: No validation that the date is in the future
     # Fix: validate_date() method checks for future date
-
-    print(datetime.today())
     
     task_id = str(generate_task_id())
     tasks[task_id] = {
@@ -103,17 +111,19 @@ def add_task():
 
 def view_all_tasks():
     """View all tasks."""
-    print("\n=== All Tasks ===")
+    print(f"\n{'============================ All Tasks ============================':^64}")
     
     if not tasks:
         print("No tasks found.")
         return
     
     # Bug: This doesn't format output nicely with proper spacing
-    print("ID | Title | Due Date | Status | Created Date")
-    print("-" * 40)
+    # Fix: Uses alignment and width to have minimum column lengths for each task
+    print(f"{'ID':<4} | {'Title':<20} | {'Due Date':<10} | {'Status':<10} | {'Created Date':<10}")
+    print("-" * 66)
     for task_id, task in tasks.items():
-        print(f"{task_id} | {task['title']} | {task['due_date']} | {task['status']}")
+        #print(f"{task_id} | {task['title']} | {task['due_date']} | {task['status']} | {task['created_date']}")
+        print(f"{task_id:<4} | {task['title']:<20} | {task['due_date']:<10} | {task['status']:<10} | {task['created_date']:<10}")
 
 def view_task():
     """View details of a specific task."""
@@ -155,9 +165,13 @@ def update_task():
     new_description = input("New Description: ")
     
     print(f"Current Due Date: {task['due_date']}")
-    new_due_date = ""
-    while not new_due_date:
-        new_due_date = validate_data(input("New Due Date (YYYY-MM-DD): "))
+    new_due_date_input = input("New due date (YYYY-MM-DD): ")
+    while True:
+        new_due_date = validate_date(new_due_date_input)
+        if new_due_date or not new_due_date_input: # checks for valid input or empty input
+            break
+        new_due_date_input = input("New due date (YYYY-MM-DD): ")
+
     
     # Bug: No validation on due date format
     # Fix: Use helper method validate_date to validate date format and future date
@@ -176,16 +190,24 @@ def update_task():
     print(f"Task {task_id} updated successfully!")
 
 # Bug: Missing implementation of mark_task_complete function (FR1.7)
+# Fix: Implementation that checks if task is already marked as complete or if task id is non-existent
 def mark_task_complete():
     """Mark a task as complete"""
     print("\n=== Mark Task as Complete===")
 
     task_id = input("Enter task ID: ") # follows same format as other methods for constintency
 
-    task = tasks[task_id]
-    task['status'] = "complete"
+    if task_id not in tasks:
+        print(f"Task {task_id} not found.")
+        return
 
-    print("Task was successfully marked as complete.")
+    task = tasks[task_id]
+    if task['status'] == "complete":
+        print(f'Task {task_id} is already marked as complete.')
+    else:
+        task['status'] = "complete"
+        print(f"Task {task_id} was successfully marked as complete.")
+        save_tasks()
 
 
 def delete_task():
@@ -201,11 +223,10 @@ def delete_task():
     # Bug: Missing confirmation before deletion
     # Fix: User is continuously pronmpted until Y (yes) or n (no) is inputted
     while True:
-
-        choice = input("Are you sure you want to delete this task? (Y/n): ")
+        choice = input("Are you sure you want to delete this task? (Y/n): ").lower()
 
         match choice:
-            case "Y":
+            case "y":
                 del tasks[task_id]
                 save_tasks()
                 print(f"Task {task_id} deleted successfully!")
@@ -238,7 +259,7 @@ def main():
         display_menu()
         
         # Bug: No validation on choice input
-        choice = input("Enter your choice (1-6): ")
+        choice = input("Enter your choice (1-7): ")
         
         if choice == "1":
             add_task()
