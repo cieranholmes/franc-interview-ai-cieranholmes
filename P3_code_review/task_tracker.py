@@ -35,7 +35,7 @@ def save_tasks():
     # Fix: IOError handling
     try:
         with open(TASKS_FILE, "w") as f:
-            json.dump(tasks, f)
+            json.dump(tasks, f, indent=2)
     except IOError as e:
         print(f"Error: Unable to save tasks. {str(e)}")
 
