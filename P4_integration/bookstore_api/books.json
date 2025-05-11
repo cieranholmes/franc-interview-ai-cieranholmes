@@ -19,5 +19,12 @@
     "author": "F. Scott Fitzgerald",
     "price": 11.5,
     "in_stock": false
+  },
+  {
+    "id": "f01e6ae6",
+    "title": "1984",
+    "author": "Cieran Holmes",
+    "price": 10.99,
+    "in_stock": false
   }
 ]

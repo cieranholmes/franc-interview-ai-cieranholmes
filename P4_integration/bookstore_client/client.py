@@ -304,7 +304,23 @@ def search_books():
     # 2. Validate the query (not empty)
     # 3. Send a GET request to the search endpoint with the query as a parameter
     # 4. Handle any errors and display appropriate messages or search results
-    print_error("This functionality is not implemented yet.")
+
+    query_choice = input("Enter what to search for books by: ")
+
+    # Checks if choice is either title or author (also inherently checks if empty or not)
+    if not query_choice:
+        print_error("No query was entered.")
+        return
+
+    query_params = {'query': query_choice}
+
+    try:
+        response = requests.get(BOOKS_ENDPOINT + '/search', params=query_params)
+        response.raise_for_status()
+        books = response.json()
+        print(format_book_table(books))
+    except requests.exceptions.RequestException as e:
+        print_error(f"Failed to retrieve books: {e}")
 
 def display_menu():
     """Display the main menu options."""
