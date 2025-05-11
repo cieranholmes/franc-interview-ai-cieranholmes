@@ -99,7 +99,7 @@ def get_book_by_id(book_id):
         return book
     except requests.exceptions.RequestException as e:
         # Error handling
-        print_error(f"Failed to retrieve books: {e}\n")
+        print_error(f"Failed to retrieve books: {e}")
         return []
 
 def display_book_details():
@@ -108,7 +108,7 @@ def display_book_details():
 
     # Checks if anything was inputted by user
     if not book_id:
-        print("Error: no book id was entered.\n")
+        print_error("No book id was entered.")
 
     # Calls get_book_by_id() to get relevant book details
     book = get_book_by_id(book_id)
@@ -118,7 +118,7 @@ def display_book_details():
         # Uses format_book_table to print relevant book's details
         print(format_book_table(book))
     else:
-        print(f"Error: There is no book with ID {book_id}.\n")
+        print_error(f"There is no book with ID {book_id}.")
     
     # TODO: Implement this functionality
     # 1. Call get_book_by_id function
@@ -137,32 +137,33 @@ def add_book():
     # 3. Send a POST request to the appropriate endpoint
     # 4. Handle any errors and display appropriate messages
 
+
     # User input of book details 
-    book_title = input("Enter the book's title: ")
-    if not book_title:
-        print("Error: No book title was entered.\n")
+    title = input("Enter the book's title: ")
+    if not title:
+        print_error("No book title was entered.")
         return
 
-    book_author = input("Enter the book's author: ")
-    if not book_author:
-        print("No book author was entered.\n")
+    author = input("Enter the book's author: ")
+    if not author:
+        print_error("No book author was entered.")
         return
 
-    book_price = input("Enter the book's price ($): ")
-    if not bool(re.match(r'^\d+\.\d{2}$', book_price)):
-        print("Error: Book price is not in valid format.\n")
+    price = input("Enter the book's price ($): ")
+    if not bool(re.match(r'^\d+\.\d{2}$', price)):
+        print_error("Book price is not in valid format.")
         return
 
-    book_in_stock = input("Enter whether or not the book is in stock (Y/n): ")
-    if not book_in_stock.lower() in ('y', 'n'):
-        print("Error: In stock value must either be y or n.\n")
+    in_stock = input("Enter whether or not the book is in stock (Y/n): ")
+    if not in_stock.lower() in ('y', 'n'):
+        print_error("Error: In stock value must either be y or n.")
         return
 
     new_book = {
-        'title': book_title,
-        'author': book_author,
-        'price': book_price,
-        'in_stock' : book_in_stock.lower() == 'y'
+        'title': title,
+        'author': author,
+        'price': price,
+        'in_stock' : in_stock.lower() == 'y'
     }
 
     try:
@@ -173,10 +174,10 @@ def add_book():
         # Raise status code errors
         response.raise_for_status()
         # If no error: print successful mesasge
-        print("Book was successfully added.\n")
+        print_success("Book was successfully added.")
     except requests.exceptions.RequestException as e:
         # Error handling
-        print_error(f"Failed to add new book: {e}\n")
+        print_error(f"Failed to add new book: {e}")
 
 # TODO: Implement the update_book function
 def update_book():
@@ -191,7 +192,59 @@ def update_book():
     # 3. Allow the user to update each field (or keep existing values)
     # 4. Send a PUT request to the appropriate endpoint
     # 5. Handle any errors and display appropriate messages
-    print_error("This functionality is not implemented yet.")
+    book_id = input("Enter book ID: ")
+
+    # Checks if anything was inputted by user
+    if not book_id:
+        print_error("Error: no book id was entered.")
+
+    # Calls get_book_by_id() to get relevant book details
+    book = get_book_by_id(book_id)
+ 
+    if not book:
+        print_error(f"There is no book with ID {book_id}.")
+        return
+    
+    print_success(f"Book with ID {book_id} was successfully found.")
+    
+    # User input of book details 
+    print("Leave field empty to keep current value.")
+    print(f"Current Title: {book.get("title")}")
+    title = input("New Title: ")
+
+    print(f"Current Author: {book.get("author")}")
+    author = input("New Author: ")
+
+    print(f"Current Price: ${book.get('price')}")
+    price = input("New price ($): ")
+
+    print(f"Current in stock value: {book.get('in_stock')}")
+    in_stock = input("New in stock value (Y/n): ")
+
+    if title:
+        book['title'] = title
+    if author:
+        book['author'] = author
+    if price and bool(re.match(r'^\d+\.\d{2}$', price)):
+        book['price'] = price
+    if in_stock and in_stock in ('y', 'n'):
+        book['in_stock'] = (in_stock == 'y')
+
+
+    try:
+        # Specify what type of data is being sent in post message
+        headers = {'Content-Type': 'application/json'}
+        # Send post message with new book data
+        response = requests.put(BOOKS_ENDPOINT + f"/{book_id}", headers=headers, data=json.dumps(book))
+        # Raise status code errors
+        response.raise_for_status()
+        # If no error: print successful mesasge
+        print_success("Book was successfully updated.")
+    except requests.exceptions.RequestException as e:
+        # Error handling
+        print_error(f"Failed to update book: {e}")
+
+
 
 # TODO: Implement the delete_book function
 def delete_book():
