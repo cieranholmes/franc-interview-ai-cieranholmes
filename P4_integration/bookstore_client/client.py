@@ -89,6 +89,7 @@ def get_book_by_id(book_id):
     # 1. Send a GET request to the appropriate endpoint
     # 2. Handle any errors that might occur
     # 3. Return the book data if successful
+
     try:
         # Sends get message to api endpoint of relevant book
         response = requests.get(BOOKS_ENDPOINT + f"/{book_id}")
@@ -136,7 +137,6 @@ def add_book():
     # 2. Validate the inputs
     # 3. Send a POST request to the appropriate endpoint
     # 4. Handle any errors and display appropriate messages
-
 
     # User input of book details 
     title = input("Enter the book's title: ")
@@ -192,6 +192,7 @@ def update_book():
     # 3. Allow the user to update each field (or keep existing values)
     # 4. Send a PUT request to the appropriate endpoint
     # 5. Handle any errors and display appropriate messages
+
     book_id = input("Enter book ID: ")
 
     # Checks if anything was inputted by user
@@ -205,7 +206,7 @@ def update_book():
         print_error(f"There is no book with ID {book_id}.")
         return
     
-    print_success(f"Book with ID {book_id} was successfully found.")
+    print(f"Book with ID {book_id} was successfully found.")
     
     # User input of book details 
     print("Leave field empty to keep current value.")
@@ -230,7 +231,6 @@ def update_book():
     if in_stock and in_stock in ('y', 'n'):
         book['in_stock'] = (in_stock == 'y')
 
-
     try:
         # Specify what type of data is being sent in post message
         headers = {'Content-Type': 'application/json'}
@@ -245,7 +245,6 @@ def update_book():
         print_error(f"Failed to update book: {e}")
 
 
-
 # TODO: Implement the delete_book function
 def delete_book():
     """
@@ -258,7 +257,40 @@ def delete_book():
     # 2. Ask for confirmation (y/n)
     # 3. Send a DELETE request to the appropriate endpoint
     # 4. Handle any errors and display appropriate messages
-    print_error("This functionality is not implemented yet.")
+
+    book_id = input("Enter book ID: ")
+
+    # Checks if anything was inputted by user
+    if not book_id:
+        print_error("Error: no book id was entered.")
+
+    # Calls get_book_by_id() to get relevant book details
+    book = get_book_by_id(book_id)
+ 
+    if not book:
+        print_error(f"There is no book with ID {book_id}.")
+        return
+
+    print(f"Book with ID {book_id} was successfully found.")
+
+    del_confirm = input("Are you sure you want to delete this book? (Y/n): ")
+    if del_confirm.lower() not in ('y', 'n'):
+        print_error("Input be y or n.")
+        return
+
+    if del_confirm.lower() == 'n':
+        return
+
+    try:
+        # Sends delete message to api endpoint of relevant book id
+        response = requests.delete(BOOKS_ENDPOINT + f"/{book_id}")
+        # Checks status code of http method, for errors
+        response.raise_for_status()
+        # Print success message
+        print_success(f"Book with ID {book_id} was successfully deleted.")
+    except requests.exceptions.RequestException as e:
+        # Error handling
+        print_error(f"Failed to retrieve books: {e}")
 
 # TODO: Implement the search_books function
 def search_books():
