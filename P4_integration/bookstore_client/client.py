@@ -88,16 +88,33 @@ def get_book_by_id(book_id):
     # 1. Send a GET request to the appropriate endpoint
     # 2. Handle any errors that might occur
     # 3. Return the book data if successful
-    pass
+    try:
+        response = requests.get(BOOKS_ENDPOINT + f"/{book_id}")
+        response.raise_for_status()
+        book = response.json()
+        return book
+    except requests.exceptions.RequestException as e:
+        print_error(f"Failed to retrieve books: {e}")
+        return []
 
 def display_book_details():
     """Display details for a specific book."""
     book_id = input("Enter book ID: ")
+
+    if not book_id:
+        print("Error: no book id was entered.")
+
+    try:
+        book = get_book_by_id(book_id)
+        print(format_book_table(book))
+    except:
+        print(f"Error: book id {book_id} does not exist.")
     
     # TODO: Implement this functionality
     # 1. Call get_book_by_id function
     # 2. Display the book details or error message
-    print_error("This functionality is not implemented yet.")
+    # print_error("This functionality is not implemented yet.")
+
 
 # TODO: Implement the add_book function
 def add_book():
