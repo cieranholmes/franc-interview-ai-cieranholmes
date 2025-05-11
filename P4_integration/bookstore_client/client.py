@@ -10,6 +10,7 @@ import json
 from tabulate import tabulate
 import sys
 from colorama import Fore, Style, init
+import re
 
 # Initialize colorama
 init(autoreset=True)
@@ -89,32 +90,39 @@ def get_book_by_id(book_id):
     # 2. Handle any errors that might occur
     # 3. Return the book data if successful
     try:
+        # Sends get message to api endpoint of relevant book
         response = requests.get(BOOKS_ENDPOINT + f"/{book_id}")
+        # Checks status code of http method, for errors
         response.raise_for_status()
+        # Gets and returns relevant book
         book = response.json()
         return book
     except requests.exceptions.RequestException as e:
-        print_error(f"Failed to retrieve books: {e}")
+        # Error handling
+        print_error(f"Failed to retrieve books: {e}\n")
         return []
 
 def display_book_details():
     """Display details for a specific book."""
     book_id = input("Enter book ID: ")
 
+    # Checks if anything was inputted by user
     if not book_id:
-        print("Error: no book id was entered.")
+        print("Error: no book id was entered.\n")
 
-    try:
-        book = get_book_by_id(book_id)
+    # Calls get_book_by_id() to get relevant book details
+    book = get_book_by_id(book_id)
+
+    # Checks if the book's details were successfully retrieved, otherwise prints error    
+    if book:
+        # Uses format_book_table to print relevant book's details
         print(format_book_table(book))
-    except:
-        print(f"Error: book id {book_id} does not exist.")
+    else:
+        print(f"Error: There is no book with ID {book_id}.\n")
     
     # TODO: Implement this functionality
     # 1. Call get_book_by_id function
     # 2. Display the book details or error message
-    # print_error("This functionality is not implemented yet.")
-
 
 # TODO: Implement the add_book function
 def add_book():
@@ -128,7 +136,47 @@ def add_book():
     # 2. Validate the inputs
     # 3. Send a POST request to the appropriate endpoint
     # 4. Handle any errors and display appropriate messages
-    print_error("This functionality is not implemented yet.")
+
+    # User input of book details 
+    book_title = input("Enter the book's title: ")
+    if not book_title:
+        print("Error: No book title was entered.\n")
+        return
+
+    book_author = input("Enter the book's author: ")
+    if not book_author:
+        print("No book author was entered.\n")
+        return
+
+    book_price = input("Enter the book's price ($): ")
+    if not bool(re.match(r'^\d+\.\d{2}$', book_price)):
+        print("Error: Book price is not in valid format.\n")
+        return
+
+    book_in_stock = input("Enter whether or not the book is in stock (Y/n): ")
+    if not book_in_stock.lower() in ('y', 'n'):
+        print("Error: In stock value must either be y or n.\n")
+        return
+
+    new_book = {
+        'title': book_title,
+        'author': book_author,
+        'price': book_price,
+        'in_stock' : book_in_stock.lower() == 'y'
+    }
+
+    try:
+        # Specify what type of data is being sent in post message
+        headers = {'Content-Type': 'application/json'}
+        # Send post message with new book data
+        response = requests.post(BOOKS_ENDPOINT, headers=headers, data=json.dumps(new_book))
+        # Raise status code errors
+        response.raise_for_status()
+        # If no error: print successful mesasge
+        print("Book was successfully added.\n")
+    except requests.exceptions.RequestException as e:
+        # Error handling
+        print_error(f"Failed to add new book: {e}\n")
 
 # TODO: Implement the update_book function
 def update_book():
