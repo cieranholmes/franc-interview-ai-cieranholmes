@@ -101,7 +101,7 @@ def get_book_by_id(book_id):
     except requests.exceptions.RequestException as e:
         # Error handling
         print_error(f"Failed to retrieve books: {e}")
-        return []
+        return None
 
 def display_book_details():
     """Display details for a specific book."""
@@ -226,8 +226,11 @@ def update_book():
         book['title'] = title
     if author:
         book['author'] = author
-    if price and bool(re.match(r'^\d+\.\d{2}$', price)):
+    # Checks for correct format
+    if bool(re.match(r'^\d+\.\d{2}$', price)):
         book['price'] = price
+    else:
+        print_error("Incorrect price format.")
     if in_stock and in_stock in ('y', 'n'):
         book['in_stock'] = (in_stock == 'y')
 
@@ -287,10 +290,11 @@ def delete_book():
         # Checks status code of http method, for errors
         response.raise_for_status()
         # Print success message
-        print_success(f"Book with ID {book_id} was successfully deleted.")
+        print_success(response.json().get('message'))
+        # print_success(f"Book with ID {book_id} was successfully deleted.")
     except requests.exceptions.RequestException as e:
         # Error handling
-        print_error(f"Failed to retrieve books: {e}")
+        print_error(f"Failed to delete book: {e}")
 
 # TODO: Implement the search_books function
 def search_books():

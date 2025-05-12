@@ -67,8 +67,8 @@ class TestBookstoreClient(unittest.TestCase):
     def test_get_book_by_id(self, mock_get):
         """Test the get_book_by_id function."""
         # This test will fail until the function is implemented
-        if get_book_by_id("1") is None:
-            self.skipTest("get_book_by_id function not implemented yet")
+        #if get_book_by_id("1") is None:
+        #    self.skipTest("get_book_by_id function not implemented yet")
         
         # Mock the response
         mock_response = MagicMock()
@@ -87,8 +87,8 @@ class TestBookstoreClient(unittest.TestCase):
     def test_get_book_by_id_error(self, mock_get):
         """Test error handling in get_book_by_id function."""
         # This test will fail until the function is implemented
-        if get_book_by_id("999") is None:
-            self.skipTest("get_book_by_id function not implemented yet")
+        #if get_book_by_id("999") is None:
+        #    self.skipTest("get_book_by_id function not implemented yet")
         
         # Mock a 404 error
         mock_get.side_effect = requests.exceptions.HTTPError("404 Not Found")
